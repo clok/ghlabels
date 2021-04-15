@@ -1,0 +1,43 @@
+---
+- name: minor
+  color: BFD4F2
+  description: A minor or patch level change
+- name: major
+  color: F8FE7E
+  description: A major version change
+- name: dependencies
+  color: 1D76DB
+  description: Updating dependencies
+- name: BREAKING CHANGE
+  color: B60205
+  description: This change contains a breaking change.
+- name: bug
+  color: d73a4a
+  description: Something isn't working
+- name: chore
+  color: '082ECA'
+  description: DevOps, auxiliary actions, build and CI
+- name: database
+  color: FADCBC
+  description: This will affect the DB.
+- name: documentation
+  color: 0075ca
+  description: Improvements or additions to documentation
+- name: feature
+  color: 0E8A16
+  description: New feature or request
+- name: help wanted
+  color: 5319E7
+  description: I would appreciate extra attention on this.
+- name: performance
+  color: 31DBB6
+  description: Improves performance of the repo
+- name: question
+  color: d876e3
+  description: Further information is requested
+- name: refactor
+  color: EBA008
+  description: Rewrite, refactor or rework
+- name: release
+  color: E99695
+  description: A release for production
