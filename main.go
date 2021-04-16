@@ -1,91 +1,430 @@
 package main
 
 import (
-	"context"
 	_ "embed"
-	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/clok/cdocs"
+	"github.com/clok/ghlabels/types"
 	"github.com/clok/kemba"
 	"github.com/google/go-github/v35/github"
-	"golang.org/x/oauth2"
+	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
 )
 
 var (
-	k = kemba.New("sync-labels")
+	version string
+	client = types.Client{}
+	k = kemba.New("ghlabels")
 )
 
-type Label struct {
-	Name string `yaml:"name"`
-	Color string `yaml:"color"`
-	Description string `yaml:"description"`
-}
-
-//go:embed defaults.yml
+//go:embed embeds/defaults.yml
 var defaultLabelsBytes []byte
 
+// TODO: sync from Org to Repos
+// TODO: update Org labels from manifest
+
 func main() {
-	var defaultLabels []Label
-	err := yaml.Unmarshal(defaultLabelsBytes, &defaultLabels)
+	k.Println("executing")
+
+	im, err := cdocs.InstallManpageCommand(&cdocs.InstallManpageCommandInput{
+		AppName: "ghlabels",
+	})
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		log.Fatal(err)
 	}
-	k.Log(defaultLabels)
 
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: "TOKEN"},
-	)
-	tc := oauth2.NewClient(ctx, ts)
+	app := cli.NewApp()
+	app.Name = "ghlabels"
+	app.Version = version
+	app.Usage = "label sync for repos and organizations"
+	app.Commands = []*cli.Command{
+		{
+			Name:      "sync",
+			Usage:     "sync labels - delete, rename, update",
+			Subcommands: []*cli.Command{
+				{
+					Name: "all",
+					Usage: "Sync labels across ALL repos within an org or for a user",
+					Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:        "org",
+							Aliases:     []string{"o"},
+							Usage:       "GitHub Organization to view. Cannot be used with User flag.",
+						},
+						&cli.StringFlag{
+							Name:        "user",
+							Aliases:     []string{"u"},
+							Usage:       "GitHub User to view. Cannot be used with Organization flag.",
+						},
+						&cli.StringFlag{
+							Name:        "config",
+							Aliases:     []string{"c"},
+							Usage:       "Path to config file withs labels to sync.",
+						},
+						&cli.BoolFlag{
+							Name:        "merge-with-defaults",
+							Aliases:     []string{"m"},
+							Usage:       "Merge provided config with defaults, otherwise only use the provided config.",
+						},
+					},
+					Action: func(c *cli.Context) error {
+						kl := k.Extend("sync")
+						if c.String("org") != "" && c.String("user") != "" {
+							return cli.Exit(fmt.Errorf("cannot pass both organization and user flag"), 2)
+						}
 
-	client := github.NewClient(tc)
+						var defaultLabels types.Config
+						err := yaml.Unmarshal(defaultLabelsBytes, &defaultLabels)
+						if err != nil {
+							return cli.Exit(err, 2)
+						}
 
-	opt := &github.RepositoryListByOrgOptions{
-		Type: "all",
-		ListOptions: github.ListOptions{PerPage: 100},
+						var userConfig types.Config
+						var config types.Config
+						if c.String("config") != "" {
+							yamlFile, err := ioutil.ReadFile(c.String("config"))
+							if err != nil {
+								return cli.Exit(err, 2)
+							}
+							err = yaml.Unmarshal(yamlFile, &userConfig)
+							if err != nil {
+								return cli.Exit(err, 2)
+							}
+							if c.Bool("merge-with-defaults") {
+								defaultLabels.MergeLeft(userConfig)
+								config = defaultLabels
+							} else {
+								config = userConfig
+							}
+						} else {
+							config = defaultLabels
+						}
+						kl.Log(config)
+
+						client.GenerateClient()
+
+						// get all pages of results
+						var repos []*github.Repository
+						switch {
+						case c.String("org") != "":
+							repos = client.GetAllOrgRepos(c.String("org"))
+						case c.String("user") != "":
+							repos = client.GetAllUserRepos(c.String("user"))
+						}
+
+						k.Printf("Found %d repos", len(repos))
+						// Only action on non-archived and non-fork repos
+						var qualified []*types.Repo
+						for _, r := range repos {
+							switch {
+							case *r.Fork:
+								// skip
+							case *r.Archived:
+								// skip
+							case *r.Private:
+								qualified = append(qualified, types.NewRepo(*r.FullName))
+							case *r.Visibility == "public":
+								qualified = append(qualified, types.NewRepo(*r.FullName))
+							default:
+								// skip
+							}
+						}
+
+						if len(qualified) == 0 {
+							fmt.Println("No repos to update")
+							return nil
+						}
+
+						// Confirm?
+						fmt.Printf("Found %d repos that qualify\n", len(qualified))
+						confirm := false
+						prompt := &survey.Confirm{
+							Message: "Sync dem labels????",
+						}
+						err = survey.AskOne(prompt, &confirm)
+						if err != nil {
+							return cli.Exit(err, 3)
+						}
+
+						if !confirm {
+							return cli.Exit("No action. Goodbye!", 0)
+						}
+
+						// Do the thing!
+						// NOTE: This is expensive. On a large org, it will many K API calls.
+						actions := 0
+						for _, repo := range qualified {
+							repo.SetLabels(client.GetLabels(repo))
+
+							// Rename labels
+							for _, l := range defaultLabels.Rename {
+								if repo.HasLabel(l.From) {
+									k.Extend("rename").Printf("%s -> %s", l.From, l.To)
+
+									if sync := defaultLabels.FindSyncLabel(l.To); sync != nil {
+										updatedLabel := client.UpdateLabel(repo, l.From, types.Label{
+											Name:        l.To,
+											Color:       sync.Color,
+											Description: sync.Description,
+										})
+										repo.SetLabel(updatedLabel.GetName(), updatedLabel)
+										repo.DeleteLabel(l.From)
+									} else {
+										client.RenameLabel(repo, l)
+										updatedLabel := client.GetLabel(repo, l.To)
+										repo.SetLabel(updatedLabel.GetName(), updatedLabel)
+										repo.DeleteLabel(l.From)
+									}
+								}
+							}
+
+							// Update labels
+							for _, l := range defaultLabels.Sync {
+								if repo.HasLabel(l.Name) {
+									label := repo.GetLabel(l.Name)
+									// is the label different
+									if l.Color != *label.Color || l.Description != *label.Description {
+										k.Extend("update").Printf("%s: Color or description is different.", l.Name)
+										client.UpdateLabel(repo, l.Name, l)
+									}
+								} else {
+									k.Extend("create").Printf("%s: Does not exist. Creating...", l.Name)
+									label := client.CreatLabel(repo, l)
+									repo.SetLabel(label.GetName(), label)
+								}
+							}
+
+							// Delete labels
+							for _, l := range defaultLabels.Remove {
+								if repo.HasLabel(l) {
+									k.Extend("remove").Println(l)
+									client.DeleteLabel(repo, l)
+									repo.DeleteLabel(l)
+								}
+							}
+							k.Log(repo.Labels())
+
+							fmt.Printf("Label sync complete for %s", repo.Name())
+						}
+
+						fmt.Printf("TOTAL ACTIONS: %d\n", actions)
+						return nil
+					},
+				},
+				{
+					Name: "repo",
+					Usage: "Sync labels for a single repo",
+					Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:        "repo",
+							Aliases:     []string{"r"},
+							Usage:       "Repo name including owner. Examlple: clok/ghlabels",
+							Required: true,
+						},
+						&cli.StringFlag{
+							Name:        "config",
+							Aliases:     []string{"c"},
+							Usage:       "Path to config file withs labels to sync.",
+						},
+						&cli.BoolFlag{
+							Name:        "merge-with-defaults",
+							Aliases:     []string{"m"},
+							Usage:       "Merge provided config with defaults, otherwise only use the provided config.",
+						},
+					},
+					Action: func(c *cli.Context) error {
+						kl := k.Extend("sync:repo")
+
+						var defaultLabels types.Config
+						err := yaml.Unmarshal(defaultLabelsBytes, &defaultLabels)
+						if err != nil {
+							return cli.Exit(err, 2)
+						}
+
+						var userConfig types.Config
+						var config types.Config
+						if c.String("config") != "" {
+							yamlFile, err := ioutil.ReadFile(c.String("config"))
+							if err != nil {
+								return cli.Exit(err, 2)
+							}
+							err = yaml.Unmarshal(yamlFile, &userConfig)
+							if err != nil {
+								return cli.Exit(err, 2)
+							}
+							if c.Bool("merge-with-defaults") {
+								defaultLabels.MergeLeft(userConfig)
+								config = defaultLabels
+							} else {
+								config = userConfig
+							}
+						} else {
+							config = defaultLabels
+						}
+						kl.Log(config)
+
+						// get all pages of results
+						repo := types.NewRepo(c.String("repo"))
+						kl.Log(repo)
+
+						// Confirm?
+						confirm := false
+						prompt := &survey.Confirm{
+							Message: fmt.Sprintf("Sync labels on the %s repository?", repo.FullName()),
+						}
+						err = survey.AskOne(prompt, &confirm)
+						if err != nil {
+							return cli.Exit(err, 3)
+						}
+
+						if !confirm {
+							return cli.Exit("No action. Goodbye!", 0)
+						}
+
+						client.GenerateClient()
+						// Do the thing!
+						repo.SetLabels(client.GetLabels(repo))
+
+						// Rename labels
+						for _, l := range defaultLabels.Rename {
+							if repo.HasLabel(l.From) {
+								k.Extend("rename").Printf("%s -> %s", l.From, l.To)
+
+								if sync := defaultLabels.FindSyncLabel(l.To); sync != nil {
+									updatedLabel := client.UpdateLabel(repo, l.From, types.Label{
+										Name:        l.To,
+										Color:       sync.Color,
+										Description: sync.Description,
+									})
+									repo.SetLabel(updatedLabel.GetName(), updatedLabel)
+									repo.DeleteLabel(l.From)
+								} else {
+									client.RenameLabel(repo, l)
+									updatedLabel := client.GetLabel(repo, l.To)
+									repo.SetLabel(updatedLabel.GetName(), updatedLabel)
+									repo.DeleteLabel(l.From)
+								}
+							}
+						}
+
+						// Update labels
+						for _, l := range defaultLabels.Sync {
+							if repo.HasLabel(l.Name) {
+								label := repo.GetLabel(l.Name)
+								// is the label different
+								if l.Color != *label.Color || l.Description != *label.Description {
+									k.Extend("update").Printf("%s: Color or description is different.", l.Name)
+									client.UpdateLabel(repo, l.Name, l)
+								}
+							} else {
+								k.Extend("create").Printf("%s: Does not exist. Creating...", l.Name)
+								label := client.CreatLabel(repo, l)
+								repo.SetLabel(label.GetName(), label)
+							}
+						}
+
+						// Delete labels
+						for _, l := range defaultLabels.Remove {
+							if repo.HasLabel(l) {
+								k.Extend("remove").Println(l)
+								client.DeleteLabel(repo, l)
+								repo.DeleteLabel(l)
+							}
+						}
+						k.Log(repo.Labels())
+
+						fmt.Printf("Label sync complete for %s\n", repo.FullName())
+						return nil
+					},
+				},
+			},
+		},
+		{
+			Name: "dump-defaults",
+			Usage: "print default labels yaml to STDOUT",
+			Action: func(c *cli.Context) error {
+				fmt.Println(string(defaultLabelsBytes))
+				return nil
+			},
+		},
+		{
+			Name:      "stats",
+			Usage:     "prints out repo stats",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:        "org",
+					Aliases:     []string{"o"},
+					Usage:       "GitHub Organization to view. Cannot be used with User flag.",
+				},
+				&cli.StringFlag{
+					Name:        "user",
+					Aliases:     []string{"u"},
+					Usage:       "GitHub User to view. Cannot be used with Organization flag.",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				if c.String("org") != "" && c.String("user") != "" {
+					return cli.Exit(fmt.Errorf("cannot pass both organization and user flag"), 2)
+				}
+
+				client.GenerateClient()
+
+				// get all pages of results
+				var repos []*github.Repository
+				switch {
+				case c.String("org") != "":
+					repos = client.GetAllOrgRepos(c.String("org"))
+				case c.String("user") != "":
+					repos = client.GetAllUserRepos(c.String("user"))
+				}
+
+				k.Printf("Found %d repos", len(repos))
+				counts := map[string]int{"archived": 0, "forks": 0, "public": 0, "private": 0, "other": 0}
+				for _, r := range repos {
+					switch {
+					case *r.Archived:
+						counts["archived"] += 1
+					case *r.Fork:
+						counts["forks"] += 1
+					case *r.Private:
+						counts["private"] += 1
+					case *r.Visibility == "public":
+						counts["public"] += 1
+					default:
+						counts["other"] += 1
+					}
+				}
+				k.Log(counts)
+				return nil
+			},
+		},
+		im,
 	}
-	// get all pages of results
-	var allRepos []*github.Repository
-	for {
-		repos, resp, err := client.Repositories.ListByOrg(ctx, "GoodwayGroup", opt)
+
+	if os.Getenv("DOCS_MD") != "" {
+		docs, err := cdocs.ToMarkdown(app)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
-		allRepos = append(allRepos, repos...)
-		if resp.NextPage == 0 {
-			k.Println("done fetching")
-			break
-		}
-		opt.Page = resp.NextPage
-		k.Printf("Next Page: %d", opt.Page)
+		fmt.Println(docs)
+		return
 	}
 
-	k.Printf("Found %d repos", len(allRepos))
-	counts := map[string]int{"archived": 0, "forks": 0, "public": 0, "private": 0, "other": 0}
-	for _, r := range allRepos {
-		switch {
-		case *r.Archived:
-			counts["archived"] += 1
-		case *r.Fork:
-			counts["forks"] += 1
-		case *r.Private:
-			counts["private"] += 1
-		case *r.Visibility == "public":
-			counts["public"] += 1
-		default:
-			counts["other"] += 1
+	if os.Getenv("DOCS_MAN") != "" {
+		docs, err := cdocs.ToMan(app)
+		if err != nil {
+			panic(err)
 		}
+		fmt.Println(docs)
+		return
 	}
-	k.Log(counts)
-}
 
-// printJSON prints v as JSON encoded with indent to stdout. It panics on any error.
-func printJSON(v interface{}) {
-	w := json.NewEncoder(os.Stdout)
-	w.SetIndent("", "\t")
-	err := w.Encode(v)
+	err = app.Run(os.Args)
 	if err != nil {
 		panic(err)
 	}
