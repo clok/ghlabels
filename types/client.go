@@ -125,6 +125,49 @@ func (c Client) GetLabels(repo *Repo) []*github.Label {
 	return labels
 }
 
+func (c Client) GetRepoIssues(repo *Repo, label string) ([]*github.Issue, error) {
+	kl := kc.Extend(repo.FullName())
+
+	opts := github.IssueListByRepoOptions{State: "all"}
+	if label != "" {
+		opts.Labels = []string{label}
+	}
+	kl.Printf("options: %# v", opts)
+
+	ctx := context.Background()
+	issues, _, err := c.Client().Issues.ListByRepo(ctx, repo.Owner(), repo.Name(), &opts)
+	kl.Printf("GetRepoIssues: %# v", issues)
+	if err != nil {
+		return nil, err
+	}
+	return issues, nil
+}
+
+func (c Client) UpdateIssueLabels(repo *Repo, issue *github.Issue, from string, to string) error {
+	kl := kc.Extend(repo.FullName())
+
+	var labels []string
+	// remove From
+	for _, l := range issue.Labels {
+		if *l.Name != from {
+			labels = append(labels, *l.Name)
+		}
+	}
+	// add To
+	labels = append(labels, to)
+	kl.Printf("UpdateIssueLabels: %# v", labels)
+
+	ctx := context.Background()
+	_, resp, err := c.Client().Issues.AddLabelsToIssue(ctx, repo.Owner(), repo.Name(), *issue.Number, labels)
+	if err != nil {
+		return err
+	}
+	kl.Printf("UpdateIssueLabels: %s: %d", resp.Status, resp.StatusCode)
+
+	return nil
+}
+
+
 func (c Client) RenameLabel(repo *Repo, label Rename)  {
 	kl := kc.Extend(repo.FullName())
 
@@ -155,7 +198,7 @@ func (c Client) UpdateLabel(repo *Repo, name string, label Label) *github.Label 
 	return updatedLabel
 }
 
-func (c Client) CreatLabel(repo *Repo, label Label) *github.Label {
+func (c Client) CreateLabel(repo *Repo, label Label) *github.Label {
 	kl := kc.Extend(repo.FullName())
 
 	opts := &github.Label{

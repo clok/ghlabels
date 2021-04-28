@@ -58,3 +58,6 @@ sync:
   - name: techdebt
     color: 006B75
     description: Overarching classification for Tech Debt style work.
+  - name: hotfix
+    color: D93F0B
+    description: Critical Production level fix.
