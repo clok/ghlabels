@@ -9,6 +9,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/clok/cdocs"
+	"github.com/clok/ghlabels/helpers"
 	"github.com/clok/ghlabels/types"
 	"github.com/clok/kemba"
 	"github.com/google/go-github/v35/github"
@@ -112,12 +113,15 @@ func main() {
 						var repos []*github.Repository
 						switch {
 						case c.String("org") != "":
+							fmt.Printf("Pulling all repos for Organization %s ...\n", c.String("org"))
 							repos = client.GetAllOrgRepos(c.String("org"))
 						case c.String("user") != "":
+							fmt.Printf("Pulling all repos for User %s ...\n", c.String("user"))
 							repos = client.GetAllUserRepos(c.String("user"))
 						}
 
 						k.Printf("Found %d repos", len(repos))
+						fmt.Printf("Checking %d repos ...\n", len(repos))
 						// Only action on non-archived and non-fork repos
 						var qualified []*types.Repo
 						for _, r := range repos {
@@ -144,7 +148,7 @@ func main() {
 						fmt.Printf("Found %d repos that qualify\n", len(qualified))
 						confirm := false
 						prompt := &survey.Confirm{
-							Message: "Sync dem labels????",
+							Message: fmt.Sprintf("Sync labels on %d qualifying repos?", len(qualified)),
 						}
 						err = survey.AskOne(prompt, &confirm)
 						if err != nil {
@@ -155,92 +159,14 @@ func main() {
 							return cli.Exit("No action. Goodbye!", 0)
 						}
 
-						// Do the thing!
-						// NOTE: This is expensive. On a large org, it will many K API calls.
-						actions := 0
-						for _, repo := range qualified {
-							repo.SetLabels(client.GetLabels(repo))
-
-							// TODO: Clean up duplicate code
-							// Rename labels
-							// 1. Check if has the label to rename
-							// 2. Check if new label already exists
-							// 3. If NOT
-							//     - Rename the label
-							// 4. If New Label DOES EXISTS
-							//     - Create new label, if it does not exist
-							//     - Swap out old Label for new Label on ALL
-							//       Issues that have the old Label
-							for _, l := range defaultLabels.Rename {
-								if repo.HasLabel(l.From) {
-									k.Extend("rename").Printf("%s -> %s", l.From, l.To)
-
-									if sync := defaultLabels.FindSyncLabel(l.To); sync != nil {
-										if !repo.HasLabel(l.To) {
-											label := client.CreateLabel(repo, *sync)
-											repo.SetLabel(label.GetName(), label)
-										}
-
-										// If there are issues with the original label
-										issues, err := client.GetRepoIssues(repo, l.From)
-										if err != nil {
-											return cli.Exit(err, 2)
-										}
-
-										// Update Issues, swapping From for To
-										for _, issue := range issues {
-											kl.Printf("updating issue %d labels. Swapping %s for %s", *issue.Number, l.From, l.To)
-											err = client.UpdateIssueLabels(repo, issue, l.From, l.To)
-											if err != nil {
-												return cli.Exit(err, 2)
-											}
-										}
-
-										// Delete From label from the Repo on GH
-										client.DeleteLabel(repo, l.From)
-										// local copy
-										repo.DeleteLabel(l.From)
-
-										// Update the To
-										_ = client.UpdateLabel(repo, l.To, *sync)
-									} else {
-										client.RenameLabel(repo, l)
-										updatedLabel := client.GetLabel(repo, l.To)
-										repo.SetLabel(updatedLabel.GetName(), updatedLabel)
-										repo.DeleteLabel(l.From)
-									}
-								}
+						// NOTE: This is expensive. On a large org, it will make many API calls.
+						for i, repo := range qualified {
+							err = helpers.SyncLabels(repo, &client, &defaultLabels, i)
+							if err != nil {
+								return cli.Exit(err, 2)
 							}
-
-							// Update labels
-							for _, l := range defaultLabels.Sync {
-								if repo.HasLabel(l.Name) {
-									label := repo.GetLabel(l.Name)
-									// is the label different
-									if l.Color != *label.Color || l.Description != *label.Description {
-										k.Extend("update").Printf("%s: Color or description is different.", l.Name)
-										client.UpdateLabel(repo, l.Name, l)
-									}
-								} else {
-									k.Extend("create").Printf("%s: Does not exist. Creating...", l.Name)
-									label := client.CreateLabel(repo, l)
-									repo.SetLabel(label.GetName(), label)
-								}
-							}
-
-							// Delete labels
-							for _, l := range defaultLabels.Remove {
-								if repo.HasLabel(l) {
-									k.Extend("remove").Println(l)
-									client.DeleteLabel(repo, l)
-									repo.DeleteLabel(l)
-								}
-							}
-
-							fmt.Printf("Label sync complete for %s", repo.Name())
 						}
 
-						fmt.Printf("TOTAL ACTIONS: %d\n", actions)
 						return nil
 					},
 				},
@@ -315,86 +241,11 @@ func main() {
 						}
 
 						client.GenerateClient()
-						// Do the thing!
-						repo.SetLabels(client.GetLabels(repo))
-
-						// TODO: Clean up duplicate code
-						// Rename labels
-						// 1. Check if has the label to rename
-						// 2. Check if new label already exists
-						// 3. If NOT
-						//     - Rename the label
-						// 4. If New Label DOES EXISTS
-						//     - Create new label, if it does not exist
-						//     - Swap out old Label for new Label on ALL
-						//       Issues that have the old Label
-						for _, l := range defaultLabels.Rename {
-							if repo.HasLabel(l.From) {
-								k.Extend("rename").Printf("%s -> %s", l.From, l.To)
-
-								if sync := defaultLabels.FindSyncLabel(l.To); sync != nil {
-									if !repo.HasLabel(l.To) {
-										label := client.CreateLabel(repo, *sync)
-										repo.SetLabel(label.GetName(), label)
-									}
-
-									// If there are issues with the original label
-									issues, err := client.GetRepoIssues(repo, l.From)
-									if err != nil {
-										return cli.Exit(err, 2)
-									}
-
-									// Update Issues, swapping From for To
-									for _, issue := range issues {
-										kl.Printf("updating issue %d labels. Swapping %s for %s", *issue.Number, l.From, l.To)
-										err = client.UpdateIssueLabels(repo, issue, l.From, l.To)
-										if err != nil {
-											return cli.Exit(err, 2)
-										}
-									}
-
-									// Delete From label from the Repo on GH
-									client.DeleteLabel(repo, l.From)
-									// local copy
-									repo.DeleteLabel(l.From)
-
-									// Update the To
-									_ = client.UpdateLabel(repo, l.To, *sync)
-								} else {
-									client.RenameLabel(repo, l)
-									updatedLabel := client.GetLabel(repo, l.To)
-									repo.SetLabel(updatedLabel.GetName(), updatedLabel)
-									repo.DeleteLabel(l.From)
-								}
-							}
+						err = helpers.SyncLabels(repo, &client, &defaultLabels, 0)
+						if err != nil {
+							return cli.Exit(err, 2)
 						}
 
-						// Update labels
-						for _, l := range defaultLabels.Sync {
-							if repo.HasLabel(l.Name) {
-								label := repo.GetLabel(l.Name)
-								// is the label different
-								if l.Color != *label.Color || l.Description != *label.Description {
-									k.Extend("update").Printf("%s: Color or description is different.", l.Name)
-									client.UpdateLabel(repo, l.Name, l)
-								}
-							} else {
-								k.Extend("create").Printf("%s: Does not exist. Creating...", l.Name)
-								label := client.CreateLabel(repo, l)
-								repo.SetLabel(label.GetName(), label)
-							}
-						}
-
-						// Delete labels
-						for _, l := range defaultLabels.Remove {
-							if repo.HasLabel(l) {
-								k.Extend("remove").Println(l)
-								client.DeleteLabel(repo, l)
-								repo.DeleteLabel(l)
-							}
-						}
-
-						fmt.Printf("Label sync complete for %s\n", repo.FullName())
 						return nil
 					},
 				},
@@ -434,8 +285,10 @@ func main() {
 				var repos []*github.Repository
 				switch {
 				case c.String("org") != "":
+					fmt.Printf("Pulling all repos for Organization %s ...\n", c.String("org"))
 					repos = client.GetAllOrgRepos(c.String("org"))
 				case c.String("user") != "":
+					fmt.Printf("Pulling all repos for User %s ...\n", c.String("user"))
 					repos = client.GetAllUserRepos(c.String("user"))
 				}
 
@@ -455,7 +308,7 @@ func main() {
 						counts["other"] += 1
 					}
 				}
-				k.Log(counts)
+				fmt.Printf("public: %d | private: %d | forks: %d | archived: %d\n", counts["public"], counts["private"], counts["forks"], counts["archived"])
 				return nil
 			},
 		},
