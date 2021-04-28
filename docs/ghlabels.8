@@ -1,0 +1,113 @@
+.nh
+.TH ghlabels 8
+
+.SH NAME
+.PP
+ghlabels \- label sync for repos and organizations
+
+
+.SH SYNOPSIS
+.PP
+ghlabels
+
+
+.SH COMMAND TREE
+.RS
+.IP \(bu 2
+sync
+\[la]#sync\[ra]
+.RS
+.IP \(bu 2
+all
+\[la]#all\[ra]
+.IP \(bu 2
+repo
+\[la]#repo\[ra]
+
+.RE
+
+.IP \(bu 2
+dump\-defaults
+\[la]#dump-defaults\[ra]
+.IP \(bu 2
+stats
+\[la]#stats\[ra]
+.IP \(bu 2
+install\-manpage
+\[la]#install-manpage\[ra]
+
+.RE
+
+.PP
+\fBUsage\fP:
+
+.PP
+.RS
+
+.nf
+ghlabels [GLOBAL OPTIONS] command [COMMAND OPTIONS] [ARGUMENTS...]
+
+.fi
+.RE
+
+
+.SH COMMANDS
+.SH sync
+.PP
+sync labels \- delete, rename, update
+
+.SS all
+.PP
+Sync labels across ALL repos within an org or for a user
+
+.PP
+\fB\-\-config, \-c\fP="": Path to config file withs labels to sync.
+
+.PP
+\fB\-\-merge\-with\-defaults, \-m\fP: Merge provided config with defaults, otherwise only use the provided config.
+
+.PP
+\fB\-\-org, \-o\fP="": GitHub Organization to view. Cannot be used with User flag.
+
+.PP
+\fB\-\-user, \-u\fP="": GitHub User to view. Cannot be used with Organization flag.
+
+.SS repo
+.PP
+Sync labels for a single repo
+
+.PP
+\fB\-\-config, \-c\fP="": Path to config file withs labels to sync.
+
+.PP
+\fB\-\-merge\-with\-defaults, \-m\fP: Merge provided config with defaults, otherwise only use the provided config.
+
+.PP
+\fB\-\-repo, \-r\fP="": Repo name including owner. Examlple: clok/ghlabels
+
+.SH dump\-defaults
+.PP
+print default labels yaml to STDOUT
+
+.SH stats
+.PP
+prints out repo stats
+
+.PP
+\fB\-\-org, \-o\fP="": GitHub Organization to view. Cannot be used with User flag.
+
+.PP
+\fB\-\-user, \-u\fP="": GitHub User to view. Cannot be used with Organization flag.
+
+.SH install\-manpage
+.PP
+Generate and install man page
+
+.PP
+.RS
+
+.PP
+NOTE: Windows is not supported
+
+.RE
+

@@ -6,6 +6,8 @@
 
 Simple CLI tool to help manage labels across repos
 
+> Please see [the docs for details on the commands.](./docs/ghlabels.md)
+
 ```text
 $ bin/ghlabels 
 NAME:
