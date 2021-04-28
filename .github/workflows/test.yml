@@ -1,0 +1,35 @@
+on: [ push, pull_request ]
+name: test
+
+env:
+  GO_VERSION: "1.16"
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        if: success()
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Calc coverage
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go test -v -covermode=count -coverprofile=coverage.out -run ^Test
+
+      - name: Convert coverage to lcov
+        uses: jandelgado/gcov2lcov-action@v1.0.8
+        with:
+          infile: coverage.out
+          outfile: coverage.lcov
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@v1.1.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: coverage.lcov
