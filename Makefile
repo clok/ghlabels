@@ -65,9 +65,12 @@ changelog: ## Generate changelog
 	git-chglog --next-tag $(VERSION) -o CHANGELOG.md
 
 .PHONY: release
-release: ## Release a new tag
+release: changelog   ## Release a new tag
 	@ $(MAKE) --no-print-directory log-$@
-	./release.sh $(VERSION)
+	git add CHANGELOG.md
+	git commit -m "chore: update changelog for $(VERSION)"
+	git tag $(VERSION)
+	git push origin main $(VERSION)
 
 .PHONY: docs
 docs: ## Generate new docs
