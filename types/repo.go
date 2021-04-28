@@ -11,20 +11,20 @@ var (
 )
 
 type Repo struct {
-	name string
-	owner string
+	name     string
+	owner    string
 	fullName string
-	labels map[string]*github.Label
+	labels   map[string]*github.Label
 }
 
 func NewRepo(fullName string) *Repo {
 	parts := strings.Split(fullName, "/")
 	kr.Printf("%s -> %s / %s", fullName, parts[0], parts[1])
 	return &Repo{
-		name: parts[1],
-		owner: parts[0],
+		name:     parts[1],
+		owner:    parts[0],
 		fullName: fullName,
-		labels: map[string]*github.Label{},
+		labels:   map[string]*github.Label{},
 	}
 }
 
@@ -51,7 +51,6 @@ func (r *Repo) FullName() string {
 func (r *Repo) SetFullName(fullName string) {
 	r.fullName = fullName
 }
-
 
 func (r *Repo) Labels() map[string]*github.Label {
 	return r.labels

@@ -14,11 +14,11 @@ func TestConfigMergeLeft(t *testing.T) {
 			Rename: []Rename{
 				{
 					From: "test",
-					To: "yolo",
+					To:   "yolo",
 				},
 				{
 					From: "test2",
-					To: "yolo2",
+					To:   "yolo2",
 				},
 			},
 		}
@@ -39,13 +39,13 @@ func TestConfigMergeLeft(t *testing.T) {
 
 		type test struct {
 			expect Rename
-			index int
+			index  int
 		}
 
 		table := []test{
-			{ expect: Rename{"test", "not yolo"}, index: 0 },
-			{ expect: Rename{"new", "tag"}, index: 1 },
-			{ expect: Rename{"test2", "yolo2"}, index: 2 },
+			{expect: Rename{"test", "not yolo"}, index: 0},
+			{expect: Rename{"new", "tag"}, index: 1},
+			{expect: Rename{"test2", "yolo2"}, index: 2},
 		}
 
 		for _, tc := range table {
@@ -65,13 +65,13 @@ func TestConfigMergeLeft(t *testing.T) {
 
 		type test struct {
 			expect string
-			index int
+			index  int
 		}
 
 		table := []test{
-			{ expect: "will", index: 0 },
-			{ expect: "do a thing", index: 1 },
-			{ expect: "wont", index: 2 },
+			{expect: "will", index: 0},
+			{expect: "do a thing", index: 1},
+			{expect: "wont", index: 2},
 		}
 
 		for _, tc := range table {
@@ -83,13 +83,13 @@ func TestConfigMergeLeft(t *testing.T) {
 		c := Config{
 			Sync: []Label{
 				{
-					Name: "all that matters",
-					Color: "FFFFFF",
+					Name:        "all that matters",
+					Color:       "FFFFFF",
 					Description: "a thing",
 				},
 				{
-					Name: "is the name",
-					Color: "000000",
+					Name:        "is the name",
+					Color:       "000000",
 					Description: "another thing",
 				},
 			},
@@ -98,13 +98,13 @@ func TestConfigMergeLeft(t *testing.T) {
 		u := Config{
 			Sync: []Label{
 				{
-					Name: "all that matters",
-					Color: "123456",
+					Name:        "all that matters",
+					Color:       "123456",
 					Description: "different",
 				},
 				{
-					Name: "new-tag",
-					Color: "987654",
+					Name:        "new-tag",
+					Color:       "987654",
 					Description: "yolo",
 				},
 			},
@@ -113,13 +113,13 @@ func TestConfigMergeLeft(t *testing.T) {
 
 		type test struct {
 			expect Label
-			index int
+			index  int
 		}
 
 		table := []test{
-			{ expect: Label{"all that matters", "123456", "different"}, index: 0 },
-			{ expect: Label{"new-tag", "987654", "yolo"}, index: 1 },
-			{ expect: Label{"is the name", "000000", "another thing"}, index: 2 },
+			{expect: Label{"all that matters", "123456", "different"}, index: 0},
+			{expect: Label{"new-tag", "987654", "yolo"}, index: 1},
+			{expect: Label{"is the name", "000000", "another thing"}, index: 2},
 		}
 
 		for _, tc := range table {

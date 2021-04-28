@@ -3,8 +3,8 @@ package types
 import "strings"
 
 type Label struct {
-	Name string `yaml:"name"`
-	Color string `yaml:"color"`
+	Name        string `yaml:"name"`
+	Color       string `yaml:"color"`
 	Description string `yaml:"description"`
 }
 
@@ -14,13 +14,13 @@ func (l *Label) SetName(s string) {
 
 type Rename struct {
 	From string `yaml:"from"`
-	To string `yaml:"to"`
+	To   string `yaml:"to"`
 }
 
 type Config struct {
 	Rename []Rename `yaml:"rename"`
 	Remove []string `yaml:"remove"`
-	Sync []Label `yaml:"sync"`
+	Sync   []Label  `yaml:"sync"`
 }
 
 func (c *Config) FindSyncLabel(name string) *Label {
@@ -46,7 +46,7 @@ func (c *Config) MergeLeft(config Config) {
 				}
 			}
 		}
-		c.Rename = append(config.Rename, dl...)
+		c.Rename = append(config.Rename, dl...) //nolint:gocritic
 	}
 
 	if len(config.Remove) != 0 {
@@ -58,7 +58,7 @@ func (c *Config) MergeLeft(config Config) {
 				}
 			}
 		}
-		c.Remove = append(config.Remove, dl...)
+		c.Remove = append(config.Remove, dl...) //nolint:gocritic
 	}
 
 	if len(config.Sync) != 0 {
@@ -70,6 +70,6 @@ func (c *Config) MergeLeft(config Config) {
 				}
 			}
 		}
-		c.Sync = append(config.Sync, dl...)
+		c.Sync = append(config.Sync, dl...) //nolint:gocritic
 	}
 }

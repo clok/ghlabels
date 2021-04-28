@@ -53,7 +53,7 @@ alpine: clean ## Build binary for alpine docker image
 docker: DOCKER_TAG ?= dev
 docker: alpine ## Build Docker image
 	@ $(MAKE) --no-print-directory log-$@
-	docker build --pull --tag ghcr.io/goodwaygroup/$(NAME):$(DOCKER_TAG) .
+	docker build --pull --tag ghcr.io/clok/$(NAME):$(DOCKER_TAG) .
 	make clean
 
 ###########

@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	k = kemba.New("ghlabels:helpers")
+	k   = kemba.New("ghlabels:helpers")
 	ksl = k.Extend("SyncLabels")
 )
 

@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	k = kemba.New("ghlabels:types")
+	k  = kemba.New("ghlabels:types")
 	kc = k.Extend("Client")
 )
 
@@ -36,7 +36,7 @@ func (c *Client) GenerateClient() {
 func (c Client) GetAllUserRepos(user string) (allRepos []*github.Repository) {
 	kl := kc.Extend("GetAllUserRepos")
 	opt := &github.RepositoryListOptions{
-		Type: "all",
+		Type:        "all",
 		ListOptions: github.ListOptions{PerPage: 50},
 	}
 
@@ -61,7 +61,7 @@ func (c Client) GetAllUserRepos(user string) (allRepos []*github.Repository) {
 func (c Client) GetAllOrgRepos(org string) (allRepos []*github.Repository) {
 	kl := kc.Extend("GetAllOrgRepos")
 	opt := &github.RepositoryListByOrgOptions{
-		Type: "all",
+		Type:        "all",
 		ListOptions: github.ListOptions{PerPage: 50},
 	}
 
@@ -167,14 +167,13 @@ func (c Client) UpdateIssueLabels(repo *Repo, issue *github.Issue, from string, 
 	return nil
 }
 
-
-func (c Client) RenameLabel(repo *Repo, label Rename)  {
+func (c Client) RenameLabel(repo *Repo, label Rename) {
 	kl := kc.Extend(repo.FullName())
 
 	kl.Printf("RenameLabel: %# v", label)
 	ctx := context.Background()
 	_, _, err := c.Client().Issues.EditLabel(ctx, repo.Owner(), repo.Name(), label.From, &github.Label{
-		Name:        &label.To,
+		Name: &label.To,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -215,8 +214,7 @@ func (c Client) CreateLabel(repo *Repo, label Label) *github.Label {
 	return updatedLabel
 }
 
-func (c Client) DeleteLabel(repo *Repo, label string)  {
-	//kl := kc.Extend(repo.FullName())
+func (c Client) DeleteLabel(repo *Repo, label string) {
 	ctx := context.Background()
 	_, err := c.Client().Issues.DeleteLabel(ctx, repo.Owner(), repo.Name(), label)
 	if err != nil {
