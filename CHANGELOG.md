@@ -2,9 +2,17 @@
 ## [Unreleased]
 
 
+<a name="v0.1.2"></a>
+## [v0.1.2] - 2021-04-29
+### Chore
+- **docs:** updating docs for version v0.1.2
+- **release:** updated release process to include release script
+
+
 <a name="v0.1.1"></a>
 ## [v0.1.1] - 2021-04-29
 ### Chore
+- update changelog for v0.1.1
 - **docs:** update readme and command help text
 - **release:** added homebrew installer
 
@@ -35,5 +43,6 @@
 - **sync:** moved to functional pattern
 
 
-[Unreleased]: https://github.com/clok/ghlabels/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/clok/ghlabels/compare/v0.1.2...HEAD
+[v0.1.2]: https://github.com/clok/ghlabels/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/clok/ghlabels/compare/v0.1.0...v0.1.1
