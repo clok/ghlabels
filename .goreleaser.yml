@@ -44,3 +44,15 @@ dockers:
     image_templates:
       - "ghcr.io/clok/ghlabels:{{ .RawVersion }}"
       - "ghcr.io/clok/ghlabels:latest"
+
+brews:
+  - tap:
+      owner: clok
+      name: homebrew-ghlabels
+    homepage: "https://clokwork.net/ghlabels/"
+    description: "Simple CLI tool to help manage labels across repos"
+    license: "MIT"
+    test: |
+      system "#{bin}/ghlabels --help"
+    install: |
+      bin.install "ghlabels"

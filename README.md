@@ -60,6 +60,35 @@ and merge in the user provided configuration, with the user config taking preced
 | `remove`  	| `List` 	| List of Labels to be deleted from a Repo.                                        	| `string`                                                    	|
 | `sync`    	| `List` 	| List of Label configuration that will be used to create or update a given Label. 	| `{ name: "string", color: "sting", description: "string" }` 	|
 
+## Installation
+
+### [Homebrew](https://brew.sh) (for macOS users)
+
+```
+brew tap clok/ghlabels
+brew install ghlabels
+```
+
+### curl binary
+
+```
+$ curl https://i.jpillora.com/clok/ghlabels! | bash
+```
+
+### [docker](https://www.docker.com/)
+
+The compiled docker images are maintained on [GitHub Container Registry (ghcr.io)](https://github.com/orgs/clok/packages/container/package/ghlabels).
+We maintain the following tags:
+
+- `edge`: Image that is build from the current `HEAD` of the main line branch.
+- `latest`: Image that is built from the [latest released version](https://github.com/clok/ghlabels/releases)
+- `x.y.z` (versions): Images that are build from the tagged versions within GitHub.
+
+```bash
+docker pull ghcr.io/clok/ghlabels
+docker run -v "$PWD":/workdir ghcr.io/clok/ghlabels --version
+```
+
 ## Development
 
 1. Fork the [clok/ghlabels](https://github.com/clok/ghlabels) repo
@@ -69,3 +98,17 @@ and merge in the user provided configuration, with the user config taking preced
     - The project uses [golangci-lint](https://golangci-lint.run/usage/install/#local-installation)
 1. Commit with a Conventional Commit
 1. Open a PR
+
+## Versioning
+
+We employ [git-chglog](https://github.com/git-chglog/git-chglog) to manage the [CHANGELOG.md](CHANGELOG.md). For the versions available, see the [tags on this repository](https://github.com/GoodwayGroup/gwvault/tags).
+
+## Authors
+
+* **Derek Smith** - [@clok](https://github.com/clok)
+
+See also the list of [contributors](https://github.com/clok/ghlabels/contributors) who participated in this project.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
