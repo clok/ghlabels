@@ -39,11 +39,12 @@ func main() {
 	app.Commands = []*cli.Command{
 		{
 			Name:  "sync",
-			Usage: "sync labels - delete, rename, update",
+			Usage: "sync labels - rename, sync, delete",
 			Subcommands: []*cli.Command{
 				{
-					Name:  "all",
-					Usage: "Sync labels across ALL repos within an org or for a user",
+					Name:      "all",
+					Usage:     "Sync labels across ALL repos within an org or for a user",
+					UsageText: helpers.SyncAllUsageText,
 					Flags: []cli.Flag{
 						&cli.StringFlag{
 							Name:    "org",
@@ -114,8 +115,9 @@ func main() {
 					},
 				},
 				{
-					Name:  "repo",
-					Usage: "Sync labels for a single repo",
+					Name:      "repo",
+					Usage:     "Sync labels for a single repo",
+					UsageText: helpers.SyncRepoUsageText,
 					Flags: []cli.Flag{
 						&cli.StringFlag{
 							Name:     "repo",
@@ -180,7 +182,7 @@ func main() {
 		},
 		{
 			Name:  "stats",
-			Usage: "prints out repo stats",
+			Usage: "prints out repository stats",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:    "org",
