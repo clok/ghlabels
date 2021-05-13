@@ -27,14 +27,21 @@ repo
 .RE
 
 .IP \(bu 2
-dump\-defaults
-\[la]#dump-defaults\[ra]
+config
+\[la]#config\[ra]
+.RS
+.IP \(bu 2
+defaults
+\[la]#defaults\[ra]
+.IP \(bu 2
+pull
+\[la]#pull\[ra]
+
+.RE
+
 .IP \(bu 2
 stats
 \[la]#stats\[ra]
-.IP \(bu 2
-install\-manpage
-\[la]#install-manpage\[ra]
 
 .RE
 
@@ -163,9 +170,30 @@ and merge in the user provided configuration, with the user config taking preced
 .PP
 \fB\-\-repo, \-r\fP="": Repo name including owner. Examlple: clok/ghlabels
 
-.SH dump\-defaults
+.SH config
+.PP
+commands for viewing or generating configuration
+
+.SS defaults
 .PP
 print default labels yaml to STDOUT
+
+.SS pull
+.PP
+pull labels from a Repo and print to STDOUT
+
+.PP
+.RS
+
+.nf
+$ ghlabels config generate repo [<owner>/<repo\_name>]
+
+Example:
+
+	$ ghlabels config generate repo clok/ghlabels
+
+.fi
+.RE
 
 .SH stats
 .PP
@@ -176,16 +204,4 @@ prints out repository stats
 
 .PP
 \fB\-\-user, \-u\fP="": GitHub User to view. Cannot be used with Organization flag.
-
-.SH install\-manpage
-.PP
-Generate and install man page
-
-.PP
-.RS
-
-.PP
-NOTE: Windows is not supported
-
-.RE
 

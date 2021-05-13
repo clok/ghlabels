@@ -10,9 +10,10 @@ ghlabels
 - [sync](#sync)
     - [all](#all)
     - [repo](#repo)
-- [dump-defaults](#dump-defaults)
+- [config](#config)
+    - [defaults](#defaults)
+    - [pull](#pull)
 - [stats](#stats)
-- [install-manpage](#install-manpage)
 
 **Usage**:
 ```
@@ -115,9 +116,25 @@ and merge in the user provided configuration, with the user config taking preced
 
 **--repo, -r**="": Repo name including owner. Examlple: clok/ghlabels
 
-## dump-defaults
+## config
+
+commands for viewing or generating configuration
+
+### defaults
 
 print default labels yaml to STDOUT
+
+### pull
+
+pull labels from a Repo and print to STDOUT
+
+```
+$ ghlabels config generate repo [<owner>/<repo_name>]
+
+Example:
+
+	$ ghlabels config generate repo clok/ghlabels
+```
 
 ## stats
 
@@ -126,10 +143,4 @@ prints out repository stats
 **--org, -o**="": GitHub Organization to view. Cannot be used with User flag.
 
 **--user, -u**="": GitHub User to view. Cannot be used with Organization flag.
-
-## install-manpage
-
-Generate and install man page
-
->NOTE: Windows is not supported
 
