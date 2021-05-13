@@ -2,10 +2,22 @@
 ## [Unreleased]
 
 
+<a name="v0.1.3"></a>
+## [v0.1.3] - 2021-05-13
+### Chore
+- **deps:** update alpine docker tag to v3.13.5 ([#2](https://github.com/clok/ghlabels/issues/2))
+- **renovate:** use defaults from clok/renovate-condig
+
+### Fix
+- **deps:** update golang.org/x/oauth2 commit hash to 81ed05c ([#1](https://github.com/clok/ghlabels/issues/1))
+- **deps:** update all non-major dependencies ([#4](https://github.com/clok/ghlabels/issues/4))
+
+
 <a name="v0.1.2"></a>
 ## [v0.1.2] - 2021-04-29
 ### Chore
 - **docs:** updating docs for version v0.1.2
+- **release:** v0.1.2
 - **release:** updated release process to include release script
 
 
@@ -43,6 +55,7 @@
 - **sync:** moved to functional pattern
 
 
-[Unreleased]: https://github.com/clok/ghlabels/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/clok/ghlabels/compare/v0.1.3...HEAD
+[v0.1.3]: https://github.com/clok/ghlabels/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/clok/ghlabels/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/clok/ghlabels/compare/v0.1.0...v0.1.1
