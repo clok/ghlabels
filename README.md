@@ -101,7 +101,7 @@ docker run -v "$PWD":/workdir ghcr.io/clok/ghlabels --version
 
 ## Versioning
 
-We employ [git-chglog](https://github.com/git-chglog/git-chglog) to manage the [CHANGELOG.md](CHANGELOG.md). For the versions available, see the [tags on this repository](https://github.com/GoodwayGroup/gwvault/tags).
+We employ [git-chglog](https://github.com/git-chglog/git-chglog) to manage the [CHANGELOG.md](CHANGELOG.md). For the versions available, see the [tags on this repository](https://github.com/clok/ghlabels/tags).
 
 ## Authors
 
