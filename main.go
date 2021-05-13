@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"log"
 	"os"
 
@@ -19,14 +20,12 @@ var (
 	k       = kemba.New("ghlabels")
 )
 
-// TODO: sync from Org to Repos
-// TODO: update Org labels from manifest
-
 func main() {
 	k.Println("executing")
 
 	im, err := cdocs.InstallManpageCommand(&cdocs.InstallManpageCommandInput{
 		AppName: "ghlabels",
+		Hidden:  true,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -173,11 +172,62 @@ func main() {
 			},
 		},
 		{
-			Name:  "dump-defaults",
-			Usage: "print default labels yaml to STDOUT",
-			Action: func(c *cli.Context) error {
-				fmt.Println(helpers.GetDefaultConfig())
-				return nil
+			Name:  "config",
+			Usage: "commands for viewing or generating configuration",
+			Subcommands: []*cli.Command{
+				{
+					Name:  "defaults",
+					Usage: "print default labels yaml to STDOUT",
+					Action: func(c *cli.Context) error {
+						fmt.Println(helpers.GetDefaultConfig())
+						return nil
+					},
+				},
+				{
+					Name:    "pull",
+					Usage:   "pull labels from a Repo and print to STDOUT",
+					UsageText: `
+$ ghlabels config generate repo [<owner>/<repo_name>]
+
+Example:
+
+	$ ghlabels config generate repo clok/ghlabels
+`,
+					Action: func(c *cli.Context) error {
+						kl := k.Extend("config:generate:repo")
+						if c.NArg() <= 0 {
+							_ = cli.ShowSubcommandHelp(c)
+							return cli.Exit("ERROR: no repo provided", 2)
+						}
+
+						client.GenerateClient()
+						repo := types.NewRepo(c.Args().Get(0))
+
+						repo.SetLabels(client.GetLabels(repo))
+						kl.Log(repo)
+
+						var labels []types.Label
+						for _, l := range repo.Labels() {
+							labels = append(labels, types.Label{
+								Name:        l.GetName(),
+								Color:       l.GetColor(),
+								Description: l.GetDescription(),
+							})
+						}
+						kl.Log(labels)
+
+						config := types.Config{Sync: labels}
+						kl.Log(config)
+
+						output, err := yaml.Marshal(&config)
+						if err != nil {
+							return cli.Exit(err, 2)
+						}
+						fmt.Printf("\n---\n%s\n", string(output))
+
+						return nil
+					},
+				},
 			},
 		},
 		{
