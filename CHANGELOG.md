@@ -2,10 +2,21 @@
 ## [Unreleased]
 
 
+<a name="v1.0.0"></a>
+## [v1.0.0] - 2021-05-13
+### Chore
+- update readme
+- **docs:** updating docs for version v1.0.0
+
+### Feat
+- **config:** added config generation from a repo
+
+
 <a name="v0.1.3"></a>
 ## [v0.1.3] - 2021-05-13
 ### Chore
 - **deps:** update alpine docker tag to v3.13.5 ([#2](https://github.com/clok/ghlabels/issues/2))
+- **release:** v0.1.3
 - **renovate:** use defaults from clok/renovate-condig
 
 ### Fix
@@ -55,7 +66,8 @@
 - **sync:** moved to functional pattern
 
 
-[Unreleased]: https://github.com/clok/ghlabels/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/clok/ghlabels/compare/v1.0.0...HEAD
+[v1.0.0]: https://github.com/clok/ghlabels/compare/v0.1.3...v1.0.0
 [v0.1.3]: https://github.com/clok/ghlabels/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/clok/ghlabels/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/clok/ghlabels/compare/v0.1.0...v0.1.1
