@@ -184,8 +184,8 @@ func main() {
 					},
 				},
 				{
-					Name:    "pull",
-					Usage:   "pull labels from a Repo and print to STDOUT",
+					Name:  "pull",
+					Usage: "pull labels from a Repo and print to STDOUT",
 					UsageText: `
 $ ghlabels config generate repo [<owner>/<repo_name>]
 
