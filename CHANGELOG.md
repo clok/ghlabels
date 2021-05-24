@@ -2,11 +2,25 @@
 ## [Unreleased]
 
 
+<a name="v1.1.0"></a>
+## [v1.1.0] - 2021-05-24
+### Chore
+- create FUNDING.yml
+- **lint:** address lint issues
+
+### Feat
+- **defaults:** added default security label
+
+### Fix
+- **deps:** update golang.org/x/oauth2 commit hash to f6687ab ([#5](https://github.com/clok/ghlabels/issues/5))
+
+
 <a name="v1.0.0"></a>
 ## [v1.0.0] - 2021-05-13
 ### Chore
 - update readme
 - **docs:** updating docs for version v1.0.0
+- **release:** v1.0.0
 
 ### Feat
 - **config:** added config generation from a repo
@@ -66,7 +80,8 @@
 - **sync:** moved to functional pattern
 
 
-[Unreleased]: https://github.com/clok/ghlabels/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/clok/ghlabels/compare/v1.1.0...HEAD
+[v1.1.0]: https://github.com/clok/ghlabels/compare/v1.0.0...v1.1.0
 [v1.0.0]: https://github.com/clok/ghlabels/compare/v0.1.3...v1.0.0
 [v0.1.3]: https://github.com/clok/ghlabels/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/clok/ghlabels/compare/v0.1.1...v0.1.2
