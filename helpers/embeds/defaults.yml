@@ -61,3 +61,6 @@ sync:
   - name: hotfix
     color: D93F0B
     description: Critical Production level fix.
+  - name: security
+    color: FF0000
+    description: Vulnerability alert, security patch.
