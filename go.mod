@@ -9,6 +9,6 @@ require (
 	github.com/google/go-github/v35 v35.3.0
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.3.0
-	golang.org/x/oauth2 v0.0.0-20210615190721-d04028783cf1
+	golang.org/x/oauth2 v0.0.0-20210622215436-a8dc77f794b6
 	gopkg.in/yaml.v2 v2.4.0
 )
