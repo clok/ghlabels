@@ -3,7 +3,7 @@ module github.com/clok/ghlabels
 go 1.16
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.2.12
+	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/clok/cdocs v1.2.0
 	github.com/clok/kemba v1.1.1
 	github.com/google/go-github/v35 v35.3.0
