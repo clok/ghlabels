@@ -7,6 +7,7 @@ require (
 	github.com/clok/cdocs v1.2.0
 	github.com/clok/kemba v1.1.1
 	github.com/google/go-github/v35 v35.3.0
+	github.com/google/go-github/v58 v58.0.0
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/stretchr/testify v1.7.1
 	github.com/urfave/cli/v2 v2.8.0
