@@ -1,4 +1,4 @@
-FROM alpine:3.16.0
+FROM alpine:3.20.3
 
 COPY ghlabels /usr/local/bin/ghlabels
 RUN chmod +x /usr/local/bin/ghlabels
